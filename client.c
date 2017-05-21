@@ -80,8 +80,8 @@ int main(int argc, char *argv[]) {
          // exit(1);
       // }
    // if(pid == 0){
-      while(1){
-   send_msg(sockfd);
+
+   if(fork()==0){while(1)send_msg(sockfd);}
 // }
    // }
    
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
       // }
    // if(pid == 0){
       // while(1){
-      recieve(sockfd);
+      else{while(1)recieve(sockfd);
       }   
    // }
 

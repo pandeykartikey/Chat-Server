@@ -12,34 +12,45 @@ struct client
 {
    int sock;
    struct client* next;
-};
+}* head =NULL;
 
-struct client* head;
+// struct client* head;
 
 void addClient(int sock){
+   printf("here");
    printf("%s",head);
-   struct client* temp = head;
-   if(temp == NULL){
+   struct client* temp = (struct client*) malloc(sizeof(struct client));
+   temp->next = NULL;
+   temp->sock = sock;
+   struct client* temp2 = head;
+   if(head == NULL){
       printf("Adding HEAD\n");
-      head = (struct client*) malloc(sizeof(struct client));
-      head->sock = sock;
-      head->next = NULL;
+      head = temp;
       printf("%s\n",head );
    }
    else{
-      while(temp!=NULL)
-         temp = temp->next;
-      temp->next = (struct client*) malloc(sizeof(struct client));
-      temp->next->sock = sock;
+      while(temp2->next!=NULL)
+         temp2 = temp2->next;
       printf("Adding node\n");
-      temp->next->next = NULL;
+      temp2->next = temp;
    }
 }
-void showAll(){
+void showAll(char buffer[],char username[]){
 struct client* temp = head;
+int i = 0;
+while(temp!=NULL){
+   temp=temp->next;
+   i++;
+}
+printf("%i",i);
+temp = head;
    while(temp!=NULL){
-      int n = write(temp->sock,"I got your message",18);
-      printf("Showing message to client\n");
+      int n = write(temp->sock,buffer,18);
+      if (n < 0) {
+         perror("ERROR writing to socket");
+         exit(1);
+      }
+      printf("Showing message to client %i\n",temp->sock);
       temp=temp->next;  
    }
 }
@@ -48,7 +59,7 @@ int main( int argc, char *argv[] ) {
    char buffer[256];
    struct sockaddr_in serv_addr, cli_addr;
    int n, pid;
-   head = NULL;
+   // head = NULL;
    /* First call to socket() function */
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
    
@@ -86,24 +97,17 @@ int main( int argc, char *argv[] ) {
          perror("ERROR on accept");
          exit(1);
       }
-   		addClient(newsockfd);
       printf("%i\n",newsockfd);
+         addClient(newsockfd);
       /* Create child process */
-      pid = fork();
-      if (pid < 0) {
-         perror("ERROR on fork");
-         exit(1);
-      }
       
-      if (pid == 0) {
+      if(fork() == 0) {
          /* This is the client process */
-         // close(sockfd);
+         close(sockfd);
          doprocessing(newsockfd);
          exit(0);
       }
-      else {
-         close(newsockfd);
-      }
+      
 		
    } /* end of while */
 }
@@ -126,7 +130,7 @@ void doprocessing (int sock) {
    }
    
    printf("%sHere is the message: %s\n",username,buffer);
-   showAll();
+   showAll(buffer,username);
    // n = write(sock,"I got your message",18);
    
    if (n < 0) {
