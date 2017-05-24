@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
       perror("ERROR connecting");
       exit(1);
    }
-   recieve(sockfd);
    send_msg(sockfd);
+   recieve(sockfd);
    
    /* Now ask for a message from the user, this message
       * will be read by server
@@ -81,20 +81,20 @@ int main(int argc, char *argv[]) {
       // }
    // if(pid == 0){
 
-   if(fork()==0){while(1)send_msg(sockfd);}
-// }
-   // }
+//    if(fork()==0){while(1)send_msg(sockfd);}
+// // }
+//    // }
    
-   /* Now read server response */
-   // pid=fork();
-   // if (pid < 0) {
-         // perror("ERROR on fork");
-         // exit(1);
-      // }
-   // if(pid == 0){
-      // while(1){
-      else{while(1)recieve(sockfd);
-      }   
+//    /* Now read server response */
+//    // pid=fork();
+//    // if (pid < 0) {
+//          // perror("ERROR on fork");
+//          // exit(1);
+//       // }
+//    // if(pid == 0){
+//       // while(1){
+//       else{while(1)recieve(sockfd);
+//       }   
    // }
 
    return 0;
