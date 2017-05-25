@@ -9,20 +9,26 @@
 #define MAX_CLIENTS 10
 #define PORT 5001
 
+struct clients {
+   int sock;
+   char user[8]; 
+};
+
 int main( int argc, char *argv[] ) {
-   printf("Socket Opened");
+   printf("Socket Opened\n");
    int sockfd, newsockfd,clilen;
    char buffer[1024];
    struct sockaddr_in serv_addr, cli_addr;
-   int numfds = 0;
+   int n , numfds = 0;
    struct pollfd poll_set[MAX_CLIENTS];
+   struct clients cli[MAX_CLIENTS];
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
    
    if (sockfd < 0) {
       perror("ERROR opening socket");
       exit(1);
    }
-   printf("Socket Opened");
+   printf("Socket Opened\n");
    
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -37,46 +43,53 @@ int main( int argc, char *argv[] ) {
       exit(1);
    }
    else{
-      printf("binded");
+      printf("binded\n");
    }
    poll_set[0].fd = sockfd;
    poll_set[0].events = POLLIN;
    numfds++;
 
    listen(sockfd,5);
-   printf("listening");
+   printf("listening\n");
    clilen = sizeof(cli_addr);
    
-   while (true) {
+   while (1) {
       int fd_index;
-      poll(poll_set, numfds, 10);
+      poll(poll_set, numfds, 1000000000);
       for(fd_index = 0; fd_index < numfds; fd_index++)
       {
          if( poll_set[fd_index].revents & POLLIN ){
             if(fd_index == 0){
-               printf("Connecting");
                newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
                poll_set[numfds].fd = newsockfd;
                poll_set[numfds].events = POLLIN;
+               printf("Connecting\n");
+               send(poll_set[numfds].fd , "Username :" , 10 , 0 );
+               bzero(cli[numfds].user,8);
+               read( poll_set[numfds].fd , cli[numfds].user, 8);
+               cli[numfds].sock = newsockfd; 
+               printf("%s\n",cli[numfds].user);
                numfds++;
             }
             else{
-               if (read( poll_set[fd_index].fd , buffer, 1024) == 0)  
+               printf("here\n");
+               bzero(buffer,1024);
+               n = read( poll_set[fd_index].fd , buffer, 1024);
+               if ( n == 0)  
                {  
                  close( poll_set[fd_index].fd );  
                  poll_set[fd_index].fd = 0;  
-               }  
-                    
+               }       
                else
                {  
-                  printf("Sending\n"); 
-                  send(poll_set[fd_index].fd , buffer , strlen(buffer) , 0 );  
+                  printf("%s\n",buffer);
+                  for (int j= 1 ; j<numfds;j++){ 
+                  send(poll_set[j].fd , buffer , strlen(buffer) , 0 );  
+                  }
                }  
             }      
          }
-      }
-      
-		
+      }		
    }
    return 0;
 }

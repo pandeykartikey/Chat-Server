@@ -11,7 +11,8 @@
 void recieve(int sock){
       char buffer[256];
       bzero(buffer,256);
-      int n = read(sock, buffer, 255);
+      printf("Recieving  a message\n");
+      int n = read(sock, buffer, 256);
       if (n < 0) {
          perror("ERROR reading from socket");
        exit(1);
@@ -21,6 +22,7 @@ void recieve(int sock){
 void send_msg(int sock){
    char buffer[256];
    bzero(buffer,256);
+   printf("Send a message\n");
    fgets(buffer,255,stdin);
    int n = write(sock, buffer, strlen(buffer));
    if (n < 0) {
@@ -66,6 +68,9 @@ int main(int argc, char *argv[]) {
       perror("ERROR connecting");
       exit(1);
    }
+   printf("here\n");
+   recieve(sockfd);
+   send_msg(sockfd);
    send_msg(sockfd);
    recieve(sockfd);
    
