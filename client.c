@@ -3,38 +3,43 @@
 
 #include <netdb.h>
 #include <netinet/in.h>
-
+#include <sys/poll.h>
 #include <string.h>
 
+
+#define MAX_CLIENTS 10
 #define PORT 5001
 
 void recieve(int sock){
       char buffer[256];
       bzero(buffer,256);
-      printf("Recieving  a message\n");
       int n = read(sock, buffer, 256);
       if (n < 0) {
          perror("ERROR reading from socket");
        exit(1);
       }
-      printf("%s \n",buffer);
+      printf("%s\n",buffer);
 }
 void send_msg(int sock){
    char buffer[256];
    bzero(buffer,256);
-   printf("Send a message\n");
    fgets(buffer,255,stdin);
    int n = write(sock, buffer, strlen(buffer));
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(1);
    }
+   if(n == 0){
+    close(sock);
+    exit(1);
+   }
 }
 int main(int argc, char *argv[]) {
-   int sockfd, portno, n;
+   int sockfd, portno;
    struct sockaddr_in serv_addr;
    struct hostent *server;
-   
+   int n , numfds = 0;
+   struct pollfd poll_set[MAX_CLIENTS];
    char buffer[256];
    int pid;
    
@@ -68,12 +73,38 @@ int main(int argc, char *argv[]) {
       perror("ERROR connecting");
       exit(1);
    }
-   printf("here\n");
-   recieve(sockfd);
-   send_msg(sockfd);
-   send_msg(sockfd);
-   recieve(sockfd);
-   
+   poll_set[0].fd = sockfd;
+   poll_set[0].events = POLLIN || POLLOUT;
+   numfds++;
+   pid=fork();
+    if(pid == 0){
+      while(1)send_msg(sockfd); 
+    }
+    else{
+      while (1) {
+        int fd_index;
+        poll(poll_set, numfds, 1000);
+        for(fd_index = 0; fd_index < numfds; fd_index++)
+        {
+           if( poll_set[fd_index].revents & POLLIN ){
+                 recieve(poll_set[fd_index].fd);
+              }
+          /*else{
+              bzero(buffer,256);
+              printf("Send a message\n");
+              if(fgets(buffer,255,stdin)!= NULL){
+                printf("here \n");
+                int n = write(poll_set[fd_index].fd, buffer, strlen(buffer));
+                if (n < 0) {
+                  perror("ERROR writing to socket");
+                  exit(1);
+                }
+            }       
+          }   */
+      }
+    }
+
+  }
    /* Now ask for a message from the user, this message
       * will be read by server
    */

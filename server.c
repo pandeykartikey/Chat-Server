@@ -72,7 +72,6 @@ int main( int argc, char *argv[] ) {
                numfds++;
             }
             else{
-               printf("here\n");
                bzero(buffer,1024);
                n = read( poll_set[fd_index].fd , buffer, 1024);
                if ( n == 0)  
@@ -83,8 +82,14 @@ int main( int argc, char *argv[] ) {
                else
                {  
                   printf("%s\n",buffer);
-                  for (int j= 1 ; j<numfds;j++){ 
-                  send(poll_set[j].fd , buffer , strlen(buffer) , 0 );  
+                  char *result = malloc(strlen(cli[fd_index].user)+strlen(buffer)+1);
+                  strcpy(result, cli[fd_index].user);
+                  strcat(result, " : ");
+                  strcat(result, buffer);
+                  for (int j= 1 ; j<numfds;j++){
+
+                     send(poll_set[j].fd ,result , strlen(result) , 0 );  
+                  
                   }
                }  
             }      
