@@ -15,19 +15,21 @@ struct clients {
 };
 
 int main( int argc, char *argv[] ) {
-   printf("Socket Opened\n");
    int sockfd, newsockfd,clilen;
    char buffer[1024];
    struct sockaddr_in serv_addr, cli_addr;
    int n , numfds = 0;
    struct pollfd poll_set[MAX_CLIENTS];
    struct clients cli[MAX_CLIENTS];
+   char *pos;
+   
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
    
    if (sockfd < 0) {
       perror("ERROR opening socket");
       exit(1);
    }
+   
    printf("Socket Opened\n");
    
 
@@ -67,6 +69,8 @@ int main( int argc, char *argv[] ) {
                send(poll_set[numfds].fd , "Username :" , 10 , 0 );
                bzero(cli[numfds].user,8);
                read( poll_set[numfds].fd , cli[numfds].user, 8);
+               if ((pos=strchr(cli[numfds].user, '\n')) != NULL)
+                  *pos = '\0';
                cli[numfds].sock = newsockfd; 
                printf("%s\n",cli[numfds].user);
                numfds++;
@@ -74,6 +78,8 @@ int main( int argc, char *argv[] ) {
             else{
                bzero(buffer,1024);
                n = read( poll_set[fd_index].fd , buffer, 1024);
+               if ((pos=strchr(buffer, '\n')) != NULL)
+                  *pos = '\0';
                if ( n == 0)  
                {  
                  close( poll_set[fd_index].fd );  
